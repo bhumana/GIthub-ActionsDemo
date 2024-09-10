@@ -1,0 +1,54 @@
+name: CI/CD Pipeline
+
+# Triggers the workflow on push or pull request events
+on:
+  push:
+    branches:
+      - main  # Runs the pipeline when code is pushed to the main branch
+  pull_request:
+    branches:
+      - main  # Runs the pipeline on pull requests targeting the main branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest  # The OS where the job will run
+
+    steps:
+      # Check out the code from the repository
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      # Set up Node.js environment
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'  # You can specify your preferred Node.js version
+
+      # Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # Run tests
+      - name: Run tests
+        run: npm test
+
+      # Build the project (if necessary)
+      - name: Build project
+        run: npm run build  # Replace with your build command, if any
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build  # Runs the deploy step after a successful build
+    if: github.ref == 'refs/heads/main'  # Only deploy from the main branch
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      # Deployment step, for example, to AWS, Heroku, etc.
+      # Example for AWS S3 deployment:
+      - name: Deploy to S3
+        run: aws s3 sync ./dist s3://your-bucket-name --delete
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
